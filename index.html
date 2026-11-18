@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>구름이의 하늘 여행 · CLOUDY JOURNEY</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css">
+<style>
+:root{
+  --navy:#2b1f6e; --pink:#ff5fb4; --pinkl:#ffc2e2; --cream:#fff2f8;
+  --lav:#c8a6f2; --mint:#8fe8c6; --yellow:#ffd84d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#5b33a6;
+  font-family:'Galmuri11','Galmuri9','DungGeunMo',monospace;color:var(--navy);
+  -webkit-user-select:none;user-select:none}
+#game{position:fixed;inset:0;width:100vw;height:100vh;display:block;
+  image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* pixel box */
+.px{background:var(--cream);border:4px solid var(--navy);box-shadow:0 5px 0 var(--navy)}
+.hidden{display:none !important}
+
+/* ---------- title ---------- */
+#title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;padding:7vh 20px 8vh;text-align:center}
+.logo{line-height:1.1}
+.logo h1{font-size:clamp(34px,6.4vw,92px);color:#fff;font-weight:normal;letter-spacing:2px;
+  text-shadow:
+   4px 0 var(--navy),-4px 0 var(--navy),0 4px var(--navy),0 -4px var(--navy),
+   4px 4px var(--navy),-4px 4px var(--navy),4px -4px var(--navy),-4px -4px var(--navy),
+   0 10px var(--pink),4px 10px var(--pink),-4px 10px var(--pink)}
+.logo p{margin-top:22px;font-size:clamp(14px,1.9vw,26px);letter-spacing:.5em;color:var(--yellow);
+  text-shadow:3px 0 var(--navy),-3px 0 var(--navy),0 3px var(--navy),0 -3px var(--navy)}
+.bottom{display:flex;flex-direction:column;align-items:center;gap:18px}
+.guide{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.guide span{padding:8px 16px;font-size:clamp(13px,1.3vw,18px)}
+.guide b{color:var(--pink);font-weight:normal}
+.note{font-size:13px;color:#fff;text-shadow:0 2px 0 var(--navy)}
+.btn{font-family:inherit;font-size:clamp(20px,2vw,28px);padding:14px 52px;background:var(--pink);
+  color:#fff;border:4px solid var(--navy);box-shadow:0 6px 0 var(--navy);cursor:pointer;letter-spacing:3px}
+.btn:hover{background:#ff7cc3}
+.btn:active{transform:translateY(5px);box-shadow:0 1px 0 var(--navy)}
+.btn.sub{background:var(--cream);color:var(--navy);font-size:16px;padding:10px 22px;letter-spacing:0}
+.blinkTxt{animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:.35}}
+
+#msg .btn.sub.main{background:var(--pink);color:#fff;font-size:20px;padding:12px 28px}
+#msg .err{display:block;margin-top:8px;font-size:12px;opacity:.6;word-break:break-all}
+#msg .camIcon{font-size:44px;line-height:1;margin-bottom:6px}
+/* ---------- HUD ---------- */
+#hud{position:fixed;top:18px;left:20px;right:20px;display:flex;justify-content:space-between;
+  align-items:flex-start;pointer-events:none}
+#hud .px{padding:8px 16px;font-size:clamp(15px,1.5vw,22px);display:flex;gap:16px;align-items:center}
+#hearts i{font-style:normal;color:var(--pink)}
+#hearts i.off{color:#d8c8ee}
+#starsTxt{color:#e7a800}
+#timeBox.warn{background:#ffd6e8;animation:bl .5s steps(2) infinite}
+
+/* ---------- center message ---------- */
+#msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:18px 30px;
+  text-align:center;font-size:clamp(16px,1.6vw,22px);line-height:1.6;max-width:min(560px,90vw)}
+#msg .big{font-size:clamp(60px,9vw,120px);line-height:1}
+#msg.count{background:none;border:none;box-shadow:none;color:#fff;
+  text-shadow:5px 0 var(--navy),-5px 0 var(--navy),0 5px var(--navy),0 -5px var(--navy),0 11px var(--pink)}
+#msg .btns{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+#msg small{display:block;font-size:13px;opacity:.75;margin-top:4px}
+
+/* ---------- practice ---------- */
+#practice{position:fixed;top:22px;left:50%;transform:translateX(-50%);padding:10px 18px;
+  text-align:center;font-size:clamp(14px,1.4vw,19px)}
+#practice .checks{display:flex;gap:10px;justify-content:center;margin-top:8px}
+#practice .checks span{border:3px solid var(--navy);padding:4px 10px;background:#fff;color:#9b8cc4}
+#practice .checks span.ok{background:var(--mint);color:var(--navy)}
+
+/* ---------- result ---------- */
+#result{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:28px 44px 30px;
+  text-align:center;min-width:min(420px,90vw)}
+#result h2{font-weight:normal;font-size:clamp(28px,3.4vw,46px);color:var(--pink);
+  text-shadow:0 3px 0 var(--navy)}
+#result .sub{margin-top:8px;font-size:16px}
+#result .stars{font-size:34px;margin:16px 0 4px;letter-spacing:6px;color:#e7a800}
+#result .stars .off{color:#ddd0ef}
+#result table{margin:10px auto 18px;font-size:16px;border-collapse:collapse}
+#result td{padding:3px 12px}
+#result td:last-child{text-align:right}
+#result tr.total td{border-top:3px dashed var(--navy);padding-top:8px;font-size:22px;color:var(--pink)}
+#result.lose h2{color:#7a56c4}
+#result.win{left:30%}
+@media (max-aspect-ratio:4/3){#result.win{left:50%;top:40%}}
+
+/* ---------- camera bubble ---------- */
+#cam{position:fixed;left:20px;bottom:20px;width:150px;padding:6px;background:var(--cream);
+  border:4px solid var(--navy);box-shadow:0 5px 0 var(--navy);transition:border-color .2s}
+#cam video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;transform:scaleX(-1);
+  background:#3d2f7a;border:3px solid var(--mint)}
+#cam.lost video{border-color:var(--pink)}
+#cam .ind{display:flex;justify-content:space-between;margin-top:5px;font-size:14px;color:#c9bde6}
+#cam .ind span.on{color:var(--pink)}
+#cam .st{position:absolute;left:12px;top:12px;font-size:11px;background:var(--mint);padding:1px 5px;border:2px solid var(--navy)}
+#cam.lost .st{background:var(--pink);color:#fff}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- TITLE -->
+<div id="title">
+  <div class="logo">
+    <h1>구름이의 하늘 여행</h1>
+    <p>CLOUDY JOURNEY</p>
+  </div>
+  <div class="bottom">
+    <div class="guide">
+      <span class="px">고개 갸웃 <b>◀ ▶</b> 이동</span>
+      <span class="px">눈 깜빡 <b>✦</b> 점프</span>
+      <span class="px">별 <b>★5</b> 모으고 무지개 섬까지!</span>
+    </div>
+    <button class="btn" id="startBtn">START</button>
+    <div class="note">웹캠 영상은 얼굴 인식에만 쓰이고 저장·전송되지 않아요</div>
+  </div>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="px"><span id="hearts"></span><span id="starsTxt">★ 0/5</span><span id="scoreTxt">0</span></div>
+  <div class="px" id="timeBox">⏱ <span id="timeTxt">90</span></div>
+</div>
+
+<div id="practice" class="px hidden">
+  연습해 볼까요? 고개를 기울이고 눈을 깜빡여 보세요
+  <div class="checks"><span id="ckL">◀ 왼쪽</span><span id="ckR">오른쪽 ▶</span><span id="ckB">✦ 깜빡</span></div>
+</div>
+
+<div id="msg" class="px hidden"></div>
+<div id="result" class="px hidden"></div>
+
+<div id="cam" class="hidden">
+  <video id="video" playsinline muted></video>
+  <div class="st" id="camSt">인식 중</div>
+  <div class="ind"><span id="inL">◀</span><span id="inB">✦ 깜빡</span><span id="inR">▶</span></div>
+</div>
+
+<script type="module">
+/* =========================================================
+   CLOUDY JOURNEY — 구름이의 하늘 여행
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const cvs = $('#game'), ctx = cvs.getContext('2d');
+const video = $('#video');
+
+const MP_VER = '0.10.14';
+const MP_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}`;
+const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+
+/* ---------- tuning ---------- */
+const H = 270;              // logical pixel height
+let W = 480;
+const FLOOR = 236;
+const GRAV = 540, JUMP = 260, MAXFALL = 150, SPEED = 112;
+const TIME_LIMIT = 90, MAX_HP = 3, STAR_TOTAL = 5;
+const TILT_DEAD = 5, TILT_FULL = 17;   // degrees
+const WORLD_W = 3600, GOAL_X = 3390;
+
+const C = {
+  navy:'#2b1f6e', out:'#3a2c8c', white:'#ffffff', cream:'#fff4fa',
+  pink:'#ff5fb4', pinkS:'#f6c3e1', blush:'#ff9ccf', yellow:'#ffd84d', yellowL:'#fff3a8',
+};
+
+/* ---------- pixel helpers ---------- */
+function mk(w, h, fn){ const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); fn(g); return c; }
+function pc(g, cx, cy, r, col){ g.fillStyle=col; for(let y=-r;y<=r;y++){ const hw=Math.floor(Math.sqrt(r*r-y*y)+0.5); g.fillRect(cx-hw, cy+y, hw*2+1, 1); } }
+function shape(g, circles, rects, col, grow=0){ for(const [x,y,r] of circles) pc(g,x,y,r+grow,col); g.fillStyle=col; for(const [x,y,w,h] of rects) g.fillRect(x-grow,y-grow,w+grow*2,h+grow*2); }
+function shadedBlob(g, circles, rects, outline, shade, light, lift=2){
+  if(outline) shape(g, circles, rects, outline, 1);
+  // shade layer then light layer offset upward (clipped to body)
+  const tmp = mk(g.canvas.width, g.canvas.height, t=>{
+    shape(t, circles, rects, shade);
+    t.globalCompositeOperation='source-atop';
+    t.translate(0,-lift); shape(t, circles, rects, light);
+  });
+  g.drawImage(tmp,0,0);
+}
+function pmap(rows, pal){ const h=rows.length, w=rows[0].length; return mk(w,h,g=>{ rows.forEach((r,y)=>{ [...r].forEach((ch,x)=>{ if(pal[ch]){ g.fillStyle=pal[ch]; g.fillRect(x,y,1,1);} }); }); }); }
+const rnd = (a,b)=>a+Math.random()*(b-a);
+
+/* ---------- sprites ---------- */
+const HERO_C=[[8,12,6],[14,8,7],[20,11,6],[5,15,4],[23,15,4]], HERO_R=[[5,12,18,7]];
+function makeHero(eyes){
+  return mk(30,23,g=>{
+    shadedBlob(g, HERO_C, HERO_R, C.navy, C.pinkS, C.white, 2);
+    // little star pin
+    g.fillStyle=C.navy; g.fillRect(20,1,3,7); g.fillRect(18,3,7,3);
+    g.fillStyle=C.yellow; g.fillRect(21,2,1,5); g.fillRect(19,4,5,1); g.fillStyle=C.yellowL; g.fillRect(21,4,1,1);
+    // face
+    g.fillStyle=C.navy;
+    if(eyes==='open'){ g.fillRect(10,12,1,2); g.fillRect(17,12,1,2); g.fillStyle='#fff'; g.fillRect(10,12,1,1); g.fillRect(17,12,1,1); g.fillStyle=C.navy; g.fillRect(10,13,1,1); g.fillRect(17,13,1,1); g.fillRect(9,12,1,2); g.fillRect(16,12,1,2);}
+    else if(eyes==='closed'){ g.fillRect(9,13,2,1); g.fillRect(16,13,2,1); }
+    else { // hurt  > <
+      g.fillRect(9,12,1,1); g.fillRect(10,13,1,1); g.fillRect(9,14,1,1);
+      g.fillRect(18,12,1,1); g.fillRect(17,13,1,1); g.fillRect(18,14,1,1);
+    }
+    g.fillStyle=C.blush; g.fillRect(6,15,2,1); g.fillRect(19,15,2,1);
+    g.fillStyle=C.navy; g.fillRect(12,15,1,1); g.fillRect(15,15,1,1); g.fillRect(13,16,2,1);
+  });
+}
+const HERO = { open:makeHero('open'), closed:makeHero('closed'), hurt:makeHero('hurt') };
+
+const STORM = mk(32,22,g=>{
+  const cs=[[9,11,6],[16,8,7],[23,11,6],[6,14,4],[26,14,4]], rs=[[6,11,20,6]];
+  shadedBlob(g, cs, rs, '#1c1450', '#3d2f7a', '#5a4aa6', 2);
+  g.fillStyle='#fff'; g.fillRect(11,12,2,2); g.fillRect(19,12,2,2);
+  g.fillStyle='#1c1450'; g.fillRect(10,10,2,1); g.fillRect(12,11,1,1); g.fillRect(20,10,2,1); g.fillRect(19,11,1,1);
+  g.fillRect(14,16,1,1); g.fillRect(15,15,2,1); g.fillRect(17,16,1,1);
+});
+const STORM_TOP = mk(44,20,g=>{
+  const cs=[[10,9,7],[20,6,8],[30,8,7],[6,12,5],[37,12,5]], rs=[[6,9,32,6]];
+  shadedBlob(g, cs, rs, '#1c1450', '#352a6e', '#4d3f95', 2);
+  g.fillStyle=C.yellow; g.fillRect(16,11,2,2); g.fillRect(25,11,2,2);
+});
+
+const STAR = pmap([
+  '.....o.....',
+  '....oyo....',
+  '....oyo....',
+  'ooooywyoooo',
+  'oyyyywyyyyo',
+  '.oyyyyyyyo.',
+  '..oyyyyyo..',
+  '..oyyoyyo..',
+  '.oyyo.oyyo.',
+  '.oyo...oyo.',
+  '.oo.....oo.'], {o:C.navy,y:C.yellow,w:C.yellowL});
+
+const platCache = {};
+function platSprite(w){
+  if(platCache[w]) return platCache[w];
+  const cs=[], n=Math.max(2,Math.round((w-8)/9));
+  for(let i=0;i<=n;i++) cs.push([5+Math.round(i*(w-10)/n), 7+(i%2), i%2?5:6]);
+  return platCache[w]=mk(w,16,g=>shadedBlob(g, cs, [[4,7,w-8,6]], '#7a56c4', '#f7c0e0', C.cream, 2));
+}
+
+const FLOOR_TILE = mk(64,40,g=>{
+  const cs=[[6,9,8],[20,6,8],[34,9,7],[47,6,8],[60,9,7],[70,6,8],[-4,6,8]];
+  shadedBlob(g, cs, [[0,9,64,31]], '#7a56c4', '#f2b4da', '#fff0f8', 3);
+  g.fillStyle='#f7c4e2'; [[8,20],[30,26],[50,19],[18,33],[42,36],[58,30]].forEach(([x,y])=>g.fillRect(x,y,3,1));
+});
+const FLOOR_BACK = mk(80,40,g=>{
+  shape(g, [[10,12,12],[34,8,12],[58,12,12],[82,8,12],[-14,8,12]], [[0,12,80,30]], '#f39ccd');
+  g.globalCompositeOperation='source-atop'; g.translate(0,3);
+  shape(g, [[10,12,12],[34,8,12],[58,12,12],[82,8,12],[-14,8,12]], [[0,12,80,30]], '#f7b2d9');
+});
+
+const MOON = mk(52,52,g=>{
+  pc(g,26,26,22,'#c9a8f0'); pc(g,26,26,20,'#fff2fb'); pc(g,24,28,17,'#ffffff');
+  g.fillStyle='#f2d0ee'; [[14,30],[18,38],[12,22],[22,42],[15,34]].forEach(([x,y])=>g.fillRect(x,y,2,2));
+  g.globalCompositeOperation='destination-out'; pc(g,36,18,19,'#000');
+});
+
+function cloudBg(col, colL, seed){
+  const cs=[]; let x=8;
+  for(let i=0;i<5+seed;i++){ const r=7+((i*7+seed*3)%7); cs.push([x, 22-r*0.6|0, r]); x+=r+4; }
+  const w=x+10;
+  return mk(w,34,g=>{ shape(g, cs, [[4,18,w-8,16]], col); g.globalCompositeOperation='source-atop'; g.translate(0,-3); shape(g, cs, [[4,18,w-8,16]], colL); });
+}
+const FAR_CLOUDS = [cloudBg('#d9a3e6','#e8bdf0',0), cloudBg('#e7a7dc','#f3c2e8',2), cloudBg('#d2a7ef','#e4c4f7',1)];
+const NEAR_CLOUDS = [cloudBg('#f4a6d2','#fcd0e8',1), cloudBg('#f1b0dc','#fde0f0',3)];
+
+const ISLAND = mk(260,160,g=>{
+  // rainbow
+  const cols=['#ff8fc6','#ffb37a','#ffe17a','#a8f0b0','#9fd0ff','#c3a6ff'], cx=130, cy=106, R=100, bw=5;
+  for(let y=0;y<=R;y++) for(let x=-R;x<=R;x++){ const d=Math.sqrt(x*x+y*y); const b=Math.floor((R-d)/bw); if(b>=0&&b<cols.length){ g.fillStyle=cols[b]; g.fillRect(cx+x, cy-y, 1, 1);} }
+  // island body
+  const cs=[[130,128,24],[92,121,18],[168,121,18],[58,115,13],[202,115,13],[130,148,9],[110,140,8],[152,140,8]];
+  const rs=[[20,104,220,12]];
+  shadedBlob(g, cs, rs, '#5a3ea8', '#b789dc', '#d9b4f2', 3);
+  g.fillStyle='#5a3ea8'; g.fillRect(19,103,222,1);
+  g.fillStyle='#9ff0cf'; g.fillRect(20,104,220,5);
+  g.fillStyle='#6fd3ad'; for(let x=20;x<240;x+=4){ g.fillRect(x,109,2,1+((x/4)%3===0?1:0)); }
+  // flowers
+  [[40,'#ff8fc6'],[70,'#ffe17a'],[104,'#ffffff'],[160,'#ff8fc6'],[188,'#9fd0ff'],[222,'#ffe17a']].forEach(([x,c])=>{ g.fillStyle='#4fb38f'; g.fillRect(x,101,1,3); g.fillStyle=c; g.fillRect(x-1,99,3,2); g.fillRect(x,98,1,4); });
+  // goal flag
+  g.fillStyle=C.navy; g.fillRect(208,80,2,24); g.fillStyle=C.pink; g.fillRect(210,81,12,4); g.fillRect(210,85,8,3); g.fillRect(210,88,4,1);
+});
+
+/* ---------- background (static, rebuilt on resize) ---------- */
+let BG;
+function buildBg(){
+  const bands=[[0,'#5b33a6'],[52,'#6c40b4'],[92,'#8456c6'],[126,'#a173d8'],[156,'#bf92e6'],[184,'#dcaeed'],[212,'#f2c2e6'],[240,'#fbd2e9']];
+  BG = mk(W,H,g=>{
+    for(let i=0;i<bands.length;i++){
+      const [y0,c]=bands[i], y1=i+1<bands.length?bands[i+1][0]:H;
+      g.fillStyle=c; g.fillRect(0,y0,W,y1-y0);
+    }
+    for(let i=1;i<bands.length;i++){
+      const [y0,c]=bands[i]; g.fillStyle=c;
+      for(let k=1;k<=4;k++){ const y=y0-k; for(let x=0;x<W;x++){ if(k<=2 ? (x+y)%2===0 : (x+y*3)%4===0) g.fillRect(x,y,1,1);} }
+    }
+  });
+}
+const SKYSTARS = Array.from({length:70},()=>({x:Math.random()*2000, y:rnd(6,170), s:Math.random()<.22?2:1, ph:Math.random()*6, c:Math.random()<.3?'#ffd6f0':'#ffffff'}));
+const BGCLOUDS = Array.from({length:14},(_,i)=>({x:i*170+rnd(0,60), y:rnd(150,196), k:i%3}));
+const NEARCL = Array.from({length:12},(_,i)=>({x:i*260+rnd(0,80), y:rnd(186,212), k:i%2}));
+
+/* ---------- level ---------- */
+const PLATS = [[260,196,60],[410,168,56],[600,190,70],[790,150,60],[990,182,64],[1230,156,70],[1430,124,56],[1660,184,80],[1880,148,60],[2130,178,70],[2340,136,60],[2590,170,70],[2810,140,60],[3040,182,70]].map(([x,y,w])=>({x,y,w}));
+const ISLAND_X = 3300, ISLAND_TOP = 210;
+PLATS.push({x:ISLAND_X+20, y:ISLAND_TOP, w:220, island:true});
+const STAR_POS = [[438,140],[820,122],[1458,96],[2370,108],[2840,112]];
+const STORM_DEF = [
+  {x:520,y:214,ax:0,ay:10,sp:1.6},{x:1120,y:212,ax:50,ay:4,sp:1.0},{x:1560,y:150,ax:0,ay:30,sp:1.3},
+  {x:1790,y:214,ax:0,ay:12,sp:1.8},{x:2470,y:208,ax:60,ay:6,sp:0.9},{x:2960,y:186,ax:0,ay:36,sp:1.2}];
+const BOLT_DEF = [{x:720,p:3.4,o:0},{x:1350,p:3.0,o:1.1},{x:2010,p:3.2,o:.5},{x:2260,p:2.8,o:2.0},{x:2720,p:3.0,o:1.6},{x:3190,p:3.2,o:.8}];
+const WARN=0.9, STRIKE=0.45;
+
+/* ---------- state ---------- */
+let state='title';     // title | boot | calib | practice | countdown | play | win | lose | error
+let mode='face';       // face | keys | sim
+let paused=false;
+let G = {};            // game round data
+let camX=0, tAll=0, shake=0, flash=0;
+const parts=[];
+
+function resetRound(){
+  G = {
+    p:{x:60,y:FLOOR,vx:0,vy:0,ground:true,jumps:2,inv:0,hurt:0,dir:1,squash:0,buf:0},
+    hp:MAX_HP, stars:STAR_POS.map(([x,y])=>({x,y,got:false})), got:0,
+    time:TIME_LIMIT, t:0, score:0,
+    storms:STORM_DEF.map(s=>({...s,cx:s.x,cy:s.y,ph:Math.random()*6})),
+    bolts:BOLT_DEF.map(b=>({...b,path:null,was:false})),
+  };
+  parts.length=0; camX=0; updateHud();
+}
+resetRound();
+
+/* ---------- sound ---------- */
+let AC=null;
+function beep(f1,f2,d,type='square',v=.05,delay=0){
+  if(!AC) return; const t=AC.currentTime+delay, o=AC.createOscillator(), g=AC.createGain();
+  o.type=type; o.frequency.setValueAtTime(f1,t); o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0008,t+d);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02);
+}
+const SFX = {
+  jump:()=>beep(480,900,.13,'triangle',.08),
+  star:()=>{beep(880,880,.08,'square',.04); beep(1320,1320,.14,'square',.04,.08);},
+  hit:()=>beep(320,90,.3,'sawtooth',.05),
+  win:()=>[523,659,784,1047].forEach((f,i)=>beep(f,f,.18,'square',.045,i*.13)),
+  lose:()=>[392,330,262].forEach((f,i)=>beep(f,f*.97,.22,'triangle',.07,i*.18)),
+  tick:()=>beep(660,660,.06,'square',.035),
+};
+
+/* ---------- input ---------- */
+const keys={};
+addEventListener('keydown',e=>{
+  if(['ArrowLeft','ArrowRight','ArrowUp','Space'].includes(e.code)) e.preventDefault();
+  if(e.repeat) return; keys[e.code]=true;
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') onJumpInput();
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+
+const face = {present:false, lastSeen:0, blink:0, roll:0, rollS:0, rollBase:0, blinkBase:.08,
+  closeTh:.45, openTh:.28, closed:false, closedAt:0, move:0, calib:[], blinkFx:0};
+
+function onFaceFrame(f, now){
+  if(!f.present){
+    if(now - face.lastSeen > 450) face.present=false;
+    face.move = 0; return;
+  }
+  face.present=true; face.lastSeen=now;
+  face.blink=f.blink; face.roll=f.roll;
+  face.rollS += (f.roll - face.rollS) * 0.4;
+  if(state==='calib') face.calib.push({blink:f.blink, roll:f.roll});
+
+  // blink: one close→open cycle = one input (holding eyes closed never repeats)
+  if(!face.closed){
+    if(f.blink > face.closeTh){ face.closed=true; face.closedAt=now; }
+  } else if(f.blink < face.openTh){
+    face.closed=false;
+    const d = now - face.closedAt;
+    if(d >= 20 && d <= 2000) onBlink();
+  }
+
+  // tilt (roll) → move.  roll>0 = head tilted toward user's left
+  const rel = face.rollS - face.rollBase, a = Math.abs(rel);
+  const m = a < TILT_DEAD ? 0 : Math.min(1, (a - TILT_DEAD) / (TILT_FULL - TILT_DEAD));
+  face.move = -Math.sign(rel) * m;
+}
+function onBlink(){
+  face.blinkFx = .35;
+  if(state==='practice') practiceDone.b = true;
+  onJumpInput();
+}
+function onJumpInput(){
+  if(state==='play' && !paused || state==='practice'){ G.p.buf = .2; }
+}
+function moveInput(){
+  const k = (keys.ArrowRight||keys.KeyD?1:0) - (keys.ArrowLeft||keys.KeyA?1:0);
+  if(k) return k;
+  return (mode!=='keys' && face.present) ? face.move : 0;
+}
+
+/* ---------- MediaPipe ---------- */
+let landmarker=null, lastVT=-1, stream=null;
+const IN_FRAME = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+
+async function openCamera(){
+  if(!navigator.mediaDevices?.getUserMedia) throw {kind:'insecure'};
+  let s;
+  try{ s = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user'},audio:false}); }
+  catch(e1){
+    if(e1.name==='NotAllowedError'||e1.name==='SecurityError') throw camErr(e1);
+    try{ s = await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }   // 조건 없이 한 번 더
+    catch(e2){ throw camErr(e2); }
+  }
+  stream = s; video.srcObject = s;
+  try{ await video.play(); }catch(e){}
+  $('#cam').classList.remove('hidden');
+}
+function camErr(e){
+  const k = e.name==='NotAllowedError'||e.name==='SecurityError' ? 'denied'
+          : e.name==='NotFoundError'||e.name==='OverconstrainedError' ? 'nocam'
+          : e.name==='NotReadableError'||e.name==='AbortError' ? 'busy' : 'cam';
+  return {kind:k, err:e};
+}
+async function loadModel(){
+  if(landmarker) return;
+  try{
+    const vision = await import(MP_URL);
+    const fs = await vision.FilesetResolver.forVisionTasks(MP_URL + '/wasm');
+    const opts = d => ({baseOptions:{modelAssetPath:MODEL_URL, delegate:d}, runningMode:'VIDEO', numFaces:1, outputFaceBlendshapes:true});
+    try{ landmarker = await vision.FaceLandmarker.createFromOptions(fs, opts('GPU')); }
+    catch(e){ landmarker = await vision.FaceLandmarker.createFromOptions(fs, opts('CPU')); }
+  }catch(e){ throw {kind:'model', err:e}; }
+}
+function detect(now){
+  if(!landmarker || video.readyState < 2 || video.currentTime === lastVT) return;
+  lastVT = video.currentTime;
+  let r; try{ r = landmarker.detectForVideo(video, now); }catch(e){ return; }
+  if(r.faceLandmarks && r.faceLandmarks.length){
+    const L=r.faceLandmarks[0], a=L[33], b=L[263];      // outer eye corners
+    const roll = Math.atan2((b.y-a.y)*video.videoHeight, (b.x-a.x)*video.videoWidth) * 180/Math.PI;
+    let bl=0, br=0;
+    const cats = r.faceBlendshapes?.[0]?.categories || [];
+    for(const c of cats){ if(c.categoryName==='eyeBlinkLeft') bl=c.score; else if(c.categoryName==='eyeBlinkRight') br=c.score; }
+    onFaceFrame({present:true, blink:(bl+br)/2, roll}, now);
+  } else onFaceFrame({present:false}, now);
+}
+
+/* ---------- flow ---------- */
+const median = a => { const s=[...a].sort((x,y)=>x-y); return s[s.length>>1] ?? 0; };
+let calibStart=0, countT=0, practiceDone={l:false,r:false,b:false}, practiceT=0;
+
+function setMsg(html, cls=''){ const m=$('#msg'); m.innerHTML=html; m.className='px '+cls; }
+function hideMsg(){ $('#msg').className='hidden'; }
+
+async function startFlow(m){
+  mode = m;
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  try{ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{}); }catch(e){}
+  $('#title').classList.add('hidden');
+  if(mode==='keys'){ state='boot'; beginCountdown(); return; }
+  if(mode==='sim'){ state='boot'; $('#cam').classList.remove('hidden'); beginCalib(); return; }
+  if(stream && stream.active && landmarker){ beginCalib(); return; }
+  showPermit();
+}
+
+/* 시작 전 카메라 허용 팝업 */
+function showPermit(){
+  state='permit';
+  setMsg(`<div class="camIcon">📷</div><b>카메라를 켜 주세요!</b><br>
+    구름이는 내 얼굴로 움직여요.<br>아래 버튼을 누른 뒤, 브라우저 창이 뜨면 <b>허용</b>을 눌러 주세요.
+    <small>영상은 얼굴 인식에만 쓰이고 저장·전송되지 않아요</small>
+    <div class="btns"><button class="btn sub main" id="allowBtn">카메라 허용하기</button></div>`);
+  $('#allowBtn').onclick = allowCamera;
+}
+async function allowCamera(){
+  setMsg(`<div class="camIcon">📷</div>브라우저 창에서 <b>허용</b>을 눌러 주세요…<small>창이 안 보이면 주소창 오른쪽·왼쪽을 확인해 주세요</small>`);
+  try{ await openCamera(); }
+  catch(e){ showCamError(e); return; }
+  setMsg(`<div class="camIcon">✨</div><b>카메라 ON!</b><br>얼굴 인식 마법을 준비 중이에요…<small>처음 한 번은 조금 걸릴 수 있어요</small>`);
+  try{ await loadModel(); }
+  catch(e){ showCamError(e); return; }
+  beginCalib();
+}
+const CAM_TXT = {
+  insecure:['이 화면에선 카메라를 쓸 수 없어요','파일을 Chrome으로 직접 열거나, VS Code Live Server로 열어 주세요.'],
+  denied:['카메라가 차단되어 있어요','주소창 왼쪽 아이콘(🔒/ⓘ) → <b>카메라: 허용</b>으로 바꾸고 아래 버튼을 눌러 주세요.'],
+  nocam:['카메라를 찾을 수 없어요','웹캠이 연결되어 있는지 확인해 주세요.'],
+  busy:['카메라를 다른 프로그램이 쓰고 있어요','Zoom·Teams·카메라 앱 등을 닫고 다시 눌러 주세요.'],
+  cam:['카메라를 켜지 못했어요','아래 버튼으로 다시 시도해 주세요.'],
+  model:['카메라는 켜졌는데 얼굴 인식을 불러오지 못했어요','인터넷 연결을 확인하고 다시 시도해 주세요.'],
+};
+function showCamError(e){
+  state='permit';
+  const T = CAM_TXT[e.kind] || CAM_TXT.cam;
+  const detail = e.err ? `${e.err.name||''} ${e.err.message||e.err}` : e.kind;
+  const frameTip = IN_FRAME && e.kind!=='model' ? '<br><span style="font-size:14px">※ 미리보기 창 안에서는 카메라가 막혀요. <b>새 창에서 열기</b>를 눌러 주세요.</span>' : '';
+  console.error('[camera]', e.err||e);
+  setMsg(`<div class="camIcon">🙈</div><b>${T[0]}</b><br><span style="font-size:15px">${T[1]}</span>${frameTip}
+    <div class="btns"><button class="btn sub main" id="allowBtn">다시 시도</button>
+    ${IN_FRAME?'<button class="btn sub" id="tabBtn">새 창에서 열기</button>':''}
+    <button class="btn sub" id="keysBtn">키보드로 플레이</button></div>
+    <span class="err">오류 정보: ${detail}</span>`);
+  $('#allowBtn').onclick = allowCamera;
+  if($('#tabBtn')) $('#tabBtn').onclick = ()=>window.open(location.href,'_blank');
+  $('#keysBtn').onclick = ()=>{ hideMsg(); $('#cam').classList.add('hidden'); startFlow('keys'); };
+}
+function beginCalib(){
+  state='calib'; face.calib=[]; calibStart=performance.now();
+  setMsg('정면을 보고 눈을 편하게 떠 주세요<br><span class="blinkTxt">얼굴을 맞추는 중…</span>');
+}
+function finishCalib(){
+  const c=face.calib;
+  face.rollBase = median(c.map(f=>f.roll)); face.rollS = face.rollBase;
+  face.blinkBase = median(c.map(f=>f.blink));
+  face.closeTh = Math.min(.65, Math.max(.35, face.blinkBase + .28));
+  face.openTh = Math.max(face.blinkBase + .08, face.closeTh - .18);
+  face.closed = false;
+  beginPractice();
+}
+function beginPractice(){
+  state='practice'; practiceDone={l:false,r:false,b:false}; practiceT=0; resetRound(); hideMsg();
+  $('#practice').classList.remove('hidden'); refreshChecks();
+}
+function refreshChecks(){
+  $('#ckL').classList.toggle('ok',practiceDone.l); $('#ckR').classList.toggle('ok',practiceDone.r); $('#ckB').classList.toggle('ok',practiceDone.b);
+}
+function beginCountdown(){
+  $('#practice').classList.add('hidden'); $('#result').classList.add('hidden');
+  resetRound(); state='countdown'; countT=3.999; lastCount=0;
+  $('#hud').classList.remove('hidden');
+}
+let lastCount=0;
+function startPlay(){ state='play'; hideMsg(); }
+
+function endRound(win, reason){
+  state = win ? 'win' : 'lose';
+  $('#hud').classList.add('hidden');
+  const r=$('#result');
+  const starsHtml = G.stars.map(s=>s.got?'★':'<span class="off">★</span>').join('');
+  if(win){
+    const tb=Math.ceil(G.time)*10, hb=G.hp*50, sb=G.got*100;
+    G.score = sb+tb+hb;
+    r.className='px win';
+    r.innerHTML=`<h2>무지개 섬 도착!</h2><div class="sub">구름이가 무사히 여행을 마쳤어요</div>
+      <div class="stars">${starsHtml}</div>
+      <table><tr><td>별 ${G.got}개</td><td>${sb}</td></tr><tr><td>남은 시간 ${Math.ceil(G.time)}초</td><td>${tb}</td></tr><tr><td>남은 하트 ${G.hp}개</td><td>${hb}</td></tr>
+      <tr class="total"><td>최종 점수</td><td>${G.score}</td></tr></table>
+      <button class="btn" id="againBtn">다시 하기</button>`;
+    SFX.win(); for(let i=0;i<80;i++) confetti();
+  } else {
+    r.className='px lose';
+    r.innerHTML=`<h2>앗, 여행이 멈췄어요</h2><div class="sub">${reason}</div>
+      <div class="stars">${starsHtml}</div>
+      <div class="sub" style="margin-bottom:18px">한 번 더 하면 무지개 섬에 닿을 수 있어요!</div>
+      <button class="btn" id="againBtn">다시 도전하기</button>`;
+    SFX.lose();
+  }
+  $('#againBtn').onclick = () => beginCountdown();
+}
+
+/* ---------- HUD ---------- */
+function updateHud(){
+  $('#hearts').innerHTML = Array.from({length:MAX_HP},(_,i)=>`<i class="${i<G.hp?'':'off'}">♥</i>`).join('');
+  $('#starsTxt').textContent = `★ ${G.got}/${STAR_TOTAL}`;
+  $('#scoreTxt').textContent = G.got*100;
+  $('#timeTxt').textContent = Math.max(0,Math.ceil(G.time));
+  $('#timeBox').classList.toggle('warn', G.time<=15 && state==='play');
+}
+function updateCamUi(){
+  const cam=$('#cam'); if(cam.classList.contains('hidden')) return;
+  cam.classList.toggle('lost', !face.present);
+  $('#camSt').textContent = face.present ? '인식 중' : '얼굴 없음';
+  const m=face.present?face.move:0;
+  $('#inL').classList.toggle('on', m<-.05); $('#inR').classList.toggle('on', m>.05);
+  $('#inB').classList.toggle('on', face.blinkFx>0 || face.closed);
+}
+
+/* ---------- particles ---------- */
+function puff(x,y,n=6,col=C.cream){ for(let i=0;i<n;i++) parts.push({x,y,vx:rnd(-40,40),vy:rnd(-30,5),life:rnd(.3,.55),max:.55,col,s:Math.random()<.5?2:3,g:0}); }
+function sparkle(x,y){ for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; parts.push({x,y,vx:Math.cos(a)*70,vy:Math.sin(a)*70,life:.5,max:.5,col:i%2?C.yellow:'#fff',s:2,g:0}); } }
+function confetti(){ const cols=['#ff8fc6','#ffe17a','#9fd0ff','#a8f0b0','#c3a6ff','#fff']; parts.push({x:camX+rnd(0,W),y:rnd(-60,-4),vx:rnd(-15,15),vy:rnd(20,60),life:rnd(3,6),max:6,col:cols[Math.random()*6|0],s:Math.random()<.5?2:3,g:10,wob:Math.random()*6}); }
+
+/* ---------- update ---------- */
+function hitPlayer(dirX){
+  const p=G.p; if(p.inv>0) return;
+  G.hp--; p.inv=1.6; p.hurt=.5; p.vy=-170; p.vx=dirX*140; shake=.3; SFX.hit();
+  puff(p.x,p.y-10,8,'#d9c8f5'); updateHud();
+  if(G.hp<=0) endRound(false,'먹구름과 번개에 3번 부딪혔어요');
+}
+function physics(dt, allowGoal){
+  const p=G.p;
+  const mv=moveInput();
+  p.vx += (mv*SPEED - p.vx) * Math.min(1, dt*9);
+  if(Math.abs(p.vx)>6) p.dir=Math.sign(p.vx);
+  p.x = Math.max(12, Math.min(WORLD_W-14, p.x + p.vx*dt));
+
+  if(p.buf>0){ p.buf-=dt; if(p.jumps>0){ p.vy=-JUMP; p.jumps--; p.ground=false; p.buf=0; p.squash=-.12; puff(p.x,p.y,5); SFX.jump(); } }
+  p.vy = Math.min(MAXFALL, p.vy + GRAV*dt);
+  const prevY=p.y; p.y += p.vy*dt;
+  const wasGround=p.ground; p.ground=false;
+  if(p.vy>=0){
+    for(const pl of PLATS){
+      if(p.x+8>pl.x && p.x-8<pl.x+pl.w && prevY<=pl.y+1 && p.y>=pl.y){ p.y=pl.y; p.ground=true; break; }
+    }
+    if(!p.ground && p.y>=FLOOR){ p.y=FLOOR; p.ground=true; }
+    if(p.ground){ if(!wasGround){ p.squash=.12; puff(p.x,p.y,3); } p.vy=0; p.jumps=2; }
+  }
+  if(p.inv>0) p.inv-=dt; if(p.hurt>0) p.hurt-=dt;
+  if(p.squash>0) p.squash=Math.max(0,p.squash-dt); else if(p.squash<0) p.squash=Math.min(0,p.squash+dt);
+}
+function updateWorld(dt){
+  G.t += dt;
+  for(const s of G.storms){ s.cx = s.x + Math.sin(G.t*s.sp+s.ph)*s.ax; s.cy = s.y + Math.sin(G.t*s.sp*1.3+s.ph)*s.ay; }
+  for(const b of G.bolts){
+    const ph=(G.t+b.o)%b.p, strike = ph > b.p-STRIKE;
+    b.warn = ph > b.p-STRIKE-WARN && !strike; b.strike=strike;
+    if(strike && !b.was){ b.path=boltPath(); flash=.12; }
+    b.was=strike;
+  }
+}
+function boltPath(){ const pts=[]; let x=0; for(let y=40;y<FLOOR;y+=10){ pts.push([x,y]); x=Math.max(-5,Math.min(5,x+(Math.random()<.5?-3:3))); } pts.push([0,FLOOR]); return pts; }
+
+function update(dt){
+  tAll += dt;
+  if(face.blinkFx>0) face.blinkFx-=dt;
+  if(shake>0) shake-=dt; if(flash>0) flash-=dt;
+
+  if(state==='calib'){
+    if(!face.present){ setMsg('얼굴이 보이지 않아요<br><small>카메라 정면, 밝은 곳에서 얼굴 전체가 보이게 해 주세요</small>'); calibStart=performance.now(); face.calib=[]; }
+    else { setMsg('정면을 보고 눈을 편하게 떠 주세요<br><span class="blinkTxt">얼굴을 맞추는 중…</span>'); if(performance.now()-calibStart>1600 && face.calib.length>=12) finishCalib(); }
+  }
+  else if(state==='practice'){
+    updateWorld(dt); physics(dt,false);
+    const m=face.present?face.move:0;
+    if(m<-.4) practiceDone.l=true; if(m>.4) practiceDone.r=true;
+    refreshChecks(); G.p.x=Math.min(G.p.x,420);
+    if(practiceDone.l&&practiceDone.r&&practiceDone.b){ practiceT+=dt; if(practiceT>.7) beginCountdown(); }
+  }
+  else if(state==='countdown'){
+    updateWorld(dt);
+    if(mode!=='keys' && !face.present){ setMsg('얼굴이 보이지 않아요<br><small>카메라 앞으로 돌아와 주세요</small>'); }
+    else {
+      countT-=dt; const n=Math.ceil(countT);
+      if(n!==lastCount){ lastCount=n; if(n>0) SFX.tick(); else beep(988,988,.25,'square',.05); }
+      if(countT>0) setMsg(`<div class="big">${n}</div>`,'count');
+      else if(countT>-.6) setMsg('<div class="big">GO!</div>','count');
+      else startPlay();
+      if(countT<=0) physics(dt,false);
+    }
+  }
+  else if(state==='play'){
+    paused = mode!=='keys' && !face.present;
+    if(paused){ setMsg('잠깐! 얼굴이 보이지 않아요<br><small>카메라 앞으로 돌아오면 이어서 시작해요</small>'); return; }
+    if(!$('#msg').classList.contains('hidden')) hideMsg();
+    G.time -= dt;
+    updateWorld(dt); physics(dt,true);
+    const p=G.p, pcx=p.x, pcy=p.y-10;
+    for(const s of G.stars){ if(!s.got && Math.hypot(s.x-pcx, s.y-pcy)<15){ s.got=true; G.got++; sparkle(s.x,s.y); SFX.star(); updateHud(); } }
+    for(const s of G.storms){ if(Math.abs(s.cx-pcx)<20 && Math.abs(s.cy-pcy)<14) hitPlayer(Math.sign(pcx-s.cx)||-1); }
+    for(const b of G.bolts){ if(b.strike && Math.abs(b.x-pcx)<10) hitPlayer(Math.sign(pcx-b.x)||-1); }
+    if(state!=='play') return;
+    if(p.x>=GOAL_X){ endRound(true); return; }
+    if(G.time<=0){ G.time=0; updateHud(); endRound(false,'시간이 다 됐어요'); return; }
+    updateHud();
+  }
+  else if(state==='win'){
+    updateWorld(dt);
+    const p=G.p; p.vx=0; p.vy=Math.min(MAXFALL,p.vy+GRAV*dt); p.y+=p.vy*dt;
+    if(p.y>=ISLAND_TOP){ p.y=ISLAND_TOP; p.vy=-150; p.squash=.1; }
+    if(p.squash>0) p.squash-=dt;
+    if(Math.random()<.5) confetti();
+  }
+  else if(state==='lose' || state==='permit' || state==='boot'){ updateWorld(dt); }
+
+  // camera
+  const target = (state==='title') ? (tAll*14)%2000 : state==='win' ? Math.max(0, ISLAND_X+130-W*0.7) : Math.max(0, Math.min(WORLD_W-W, G.p.x - W*0.38));
+  camX = state==='title' ? target : camX + (target-camX)*Math.min(1,dt*6);
+
+  for(let i=parts.length-1;i>=0;i--){ const q=parts[i]; q.life-=dt; if(q.life<=0){parts.splice(i,1);continue;} q.vy+=q.g*dt; q.x+=q.vx*dt+(q.wob?Math.sin(tAll*4+q.wob)*.3:0); q.y+=q.vy*dt; }
+}
+
+/* ---------- render ---------- */
+function drawHero(x,y,scale=1){
+  const p=G.p;
+  let spr = HERO.open;
+  if(p.hurt>0) spr=HERO.hurt; else if(face.closed && mode!=='keys') spr=HERO.closed; else if(state==='title' && (tAll%3.2)<.15) spr=HERO.closed;
+  const sq = p.squash>0 ? p.squash/.12*.18 : p.squash<0 ? p.squash/.12*.14 : 0;
+  const w = Math.round(spr.width*(1+sq)*scale), h = Math.round(spr.height*(1-sq)*scale);
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y));
+  if(p.dir<0) ctx.scale(-1,1);
+  ctx.drawImage(spr, -Math.round(w/2), -h+Math.round(2*scale), w, h);
+  ctx.restore();
+}
+function render(){
+  ctx.save();
+  if(shake>0) ctx.translate(Math.round(rnd(-2,2)), Math.round(rnd(-2,2)));
+  ctx.drawImage(BG,0,0);
+  const cx=Math.round(camX);
+
+  // sky stars
+  for(const s of SKYSTARS){
+    const x = ((s.x - cx*.06) % W + W) % W, tw = Math.sin(tAll*2+s.ph);
+    if(tw < -.6) continue;
+    ctx.fillStyle=s.c;
+    if(s.s===2 && tw>.3){ ctx.fillRect(x|0,(s.y|0)-2,1,5); ctx.fillRect((x|0)-2,s.y|0,5,1); }
+    else ctx.fillRect(x|0,s.y|0,s.s,s.s);
+  }
+  // shooting star
+  const ss=(tAll%7)/7; if(ss<.12){ const k=ss/.12, sx=W*.15+k*W*.5, sy=20+k*60; ctx.fillStyle='#fff'; for(let i=0;i<10;i++){ ctx.globalAlpha=(1-i/10)*(1-k); ctx.fillRect((sx-i*3)|0,(sy-i*1.2)|0,2,1);} ctx.globalAlpha=1; }
+  ctx.drawImage(MOON, Math.round(W*.76 - cx*.03), 22);
+
+  for(const c of BGCLOUDS){ const spr=FAR_CLOUDS[c.k]; const x=((c.x - cx*.2) % (W+400) + W+400) % (W+400) - 200; ctx.drawImage(spr, x|0, c.y|0); }
+  for(const c of NEARCL){ const spr=NEAR_CLOUDS[c.k]; const x=((c.x - cx*.45) % (W+500) + W+500) % (W+500) - 250; ctx.drawImage(spr, x|0, c.y|0); }
+  // back cloud sea
+  for(let x=-((cx*.75)%80); x<W; x+=80) ctx.drawImage(FLOOR_BACK, x|0, FLOOR-16);
+
+  ctx.translate(-cx,0);
+
+  if(state!=='title'){
+    // lightning warnings
+    for(const b of G.bolts){
+      if(b.x<cx-40||b.x>cx+W+40) continue;
+      if(b.warn && Math.floor(tAll*10)%2===0){ ctx.fillStyle='rgba(255,236,120,.35)'; for(let y=46;y<FLOOR;y+=6) ctx.fillRect(b.x-1,y,3,3); }
+    }
+    // island
+    ctx.drawImage(ISLAND, ISLAND_X, ISLAND_TOP-104);
+    // platforms
+    for(const pl of PLATS){ if(pl.island||pl.x>cx+W||pl.x+pl.w<cx) continue; ctx.drawImage(platSprite(pl.w), pl.x, pl.y-3); }
+    // stars
+    for(const s of G.stars){ if(s.got) continue; const by=Math.round(Math.sin(tAll*3+s.x)*2); ctx.drawImage(STAR, s.x-5, s.y-5+by);
+      if(Math.sin(tAll*5+s.x)>.7){ ctx.fillStyle='#fff'; ctx.fillRect(s.x+6,s.y-7+by,1,3); ctx.fillRect(s.x+5,s.y-6+by,3,1);} }
+    // storms
+    for(const s of G.storms){ if(s.cx<cx-40||s.cx>cx+W+40) continue; ctx.drawImage(STORM, Math.round(s.cx-16), Math.round(s.cy-11)); }
+    // bolt clouds + strikes
+    for(const b of G.bolts){
+      if(b.x<cx-40||b.x>cx+W+40) continue;
+      const jig = b.warn ? Math.round(Math.sin(tAll*40)) : 0;
+      if(b.strike && b.path){
+        for(const [w,col] of [[5,C.navy],[3,C.yellow],[1,'#fffbe0']]){
+          ctx.fillStyle=col;
+          for(let i=0;i<b.path.length-1;i++){ const [x1,y1]=b.path[i], [x2,y2]=b.path[i+1]; const n=Math.max(1,y2-y1);
+            for(let k=0;k<n;k++){ const xx=x1+(x2-x1)*k/n; ctx.fillRect(Math.round(b.x+xx-(w>>1)), y1+k, w, 1); } }
+        }
+      }
+      ctx.drawImage(STORM_TOP, b.x-22+jig, 26);
+    }
+  }
+
+  // hero
+  const p=G.p;
+  if(state==='title'){
+    ctx.translate(cx,0);
+    drawHero(W/2, 168+Math.round(Math.sin(tAll*2.4)*4), 2);
+    ctx.translate(-cx,0);
+  } else if(!(p.inv>0 && Math.floor(tAll*14)%2===0)){
+    const bob = p.ground && Math.abs(p.vx)<5 ? Math.round(Math.sin(tAll*3)*.6) : 0;
+    drawHero(p.x, p.y+bob);
+  }
+  // particles
+  for(const q of parts){ ctx.globalAlpha=Math.min(1,q.life/q.max*1.6); ctx.fillStyle=q.col; ctx.fillRect(Math.round(q.x),Math.round(q.y),q.s,q.s); }
+  ctx.globalAlpha=1;
+  ctx.translate(cx,0);
+
+  // front cloud sea
+  for(let x=-(cx%64); x<W; x+=64) ctx.drawImage(FLOOR_TILE, x|0, FLOOR+1);
+  ctx.restore();
+
+  if(flash>0){ ctx.fillStyle=`rgba(255,250,220,${flash*2})`; ctx.fillRect(0,0,W,H); }
+  if(state==='play' && paused || state==='calib'){ ctx.fillStyle='rgba(43,31,110,.25)'; ctx.fillRect(0,0,W,H); }
+}
+
+/* ---------- loop ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  if(mode==='face') detect(now);
+  update(dt); render(); updateCamUi();
+  requestAnimationFrame(loop);
+}
+function resize(){ W=Math.max(320, Math.round(innerWidth/innerHeight*H)); cvs.width=W; cvs.height=H; ctx.imageSmoothingEnabled=false; buildBg(); }
+addEventListener('resize', resize); resize();
+requestAnimationFrame(loop);
+
+$('#startBtn').onclick = () => startFlow('face');
+addEventListener('keydown', e=>{ if(e.code==='Enter'){ if(state==='title') startFlow('face'); else if(state==='win'||state==='lose') beginCountdown(); } });
+
+/* test hooks (used for automated testing; harmless in play) */
+window.CJ = {
+  get state(){return state}, get G(){return G}, face, startFlow, beginCountdown,
+  feed:(f)=>onFaceFrame(f, performance.now()),
+  setPos:(x)=>{G.p.x=x;}, setTime:(t)=>{G.time=t;},
+};
+</script>
+</body>
+</html>
